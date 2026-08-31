@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Founder Dashboard — VOID.LINK</title><link rel="stylesheet" href="styles.css">
+<style>
+body{margin:0;background:#050506;color:#f5f3f7;font-family:Inter,system-ui,sans-serif}.dash{width:min(1180px,calc(100% - 32px));margin:auto;padding:28px 0 70px}
+.top{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #242229;padding:5px 0 24px}.logo{font-weight:800;letter-spacing:-.04em}.logo span{color:#a66cff}.top-right{display:flex;gap:8px;align-items:center}.pill{font:8px "Space Mono";color:#7e7787;border:1px solid #29262f;border-radius:999px;padding:9px 11px}
+.btn{border:1px solid #29262f;background:#0d0d11;color:#f5f3f7;border-radius:9px;padding:10px 13px;cursor:pointer;font-size:10px}.btn:hover{border-color:#a66cff}.danger:hover{border-color:#ff638d;color:#ff9ab4}
+.hero{padding:60px 0 34px}.eyebrow{font:8px "Space Mono";color:#a66cff;letter-spacing:.15em}.hero h1{font-size:clamp(44px,7vw,76px);line-height:.9;letter-spacing:-.07em;margin:16px 0}.hero p{color:#7e7885;max-width:620px;font-size:12px;line-height:1.8}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.card{background:#0b0b0f;border:1px solid #25222b;border-radius:15px;padding:20px}.card span{display:block;font:8px "Space Mono";color:#67616f}.card strong{display:block;font-size:32px;margin:12px 0 3px}.card small{color:#5f5967;font-size:9px}
+.panel{margin-top:12px;background:#0b0b0f;border:1px solid #25222b;border-radius:16px;overflow:hidden}.panel-head{padding:20px;border-bottom:1px solid #25222b;display:flex;align-items:center;justify-content:space-between;gap:15px}.panel-head h2{font-size:15px;margin:0}.search{display:flex;gap:7px}.search input{width:220px;padding:10px}
+table{width:100%;border-collapse:collapse;font-size:10px}th,td{text-align:left;padding:14px 18px;border-bottom:1px solid #19171d}th{font:8px "Space Mono";color:#625d68}td{color:#aaa4b0}td strong{color:#f4f1f7}.plan{font-size:8px;border:1px solid #302a3a;border-radius:999px;padding:5px 8px;color:#b992ff}.remove{color:#a69eaa;background:none;border:0;cursor:pointer;font-size:9px}.empty{padding:35px;text-align:center;color:#696370;font-size:11px}
+.notice{position:fixed;right:20px;bottom:20px;background:#f5f3f7;color:#08080a;border-radius:10px;padding:12px 15px;font-size:10px;box-shadow:0 20px 60px #000;display:none}
+@media(max-width:800px){.cards{grid-template-columns:repeat(2,1fr)}.panel-head{align-items:stretch;flex-direction:column}.search input{width:100%}table{min-width:680px}.table-wrap{overflow:auto}}
+@media(max-width:520px){.cards{grid-template-columns:1fr}.top-right .pill{display:none}}
+</style></head><body>
+<main class="dash">
+<header class="top"><a class="logo" href="/">VOID<span>.LINK</span></a><div class="top-right"><span class="pill">FOUNDER / PRIVATE</span><button class="btn" id="logout">Log out</button></div></header>
+<section class="hero"><div class="eyebrow">CONTROL CENTER</div><h1>Run your platform.</h1><p>Manage claimed handles, monitor plan distribution and keep founder access separate from the public pricing experience.</p></section>
+<section class="cards">
+<div class="card"><span>TOTAL USERS</span><strong id="total">—</strong><small>claimed handles</small></div>
+<div class="card"><span>FREE</span><strong id="free">—</strong><small>public accounts</small></div>
+<div class="card"><span>PLUS</span><strong id="plus">—</strong><small>public accounts</small></div>
+<div class="card"><span>PRO</span><strong id="pro">—</strong><small>public accounts</small></div>
+</section>
+<section class="panel"><div class="panel-head"><h2>Claimed handles</h2><form class="search" id="search"><input id="q" placeholder="Search handles or plans"><button class="btn">Search</button></form></div>
+<div class="table-wrap"><table><thead><tr><th>HANDLE</th><th>PLAN</th><th>CREATED</th><th>ID</th><th></th></tr></thead><tbody id="users"></tbody></table></div></section>
+</main><div class="notice" id="notice"></div>
+<script>
+const $=s=>document.querySelector(s);
+const notice=t=>{const n=$('#notice');n.textContent=t;n.style.display='block';clearTimeout(window.nt);window.nt=setTimeout(()=>n.style.display='none',2400)};
+async function loadStats(){const r=await fetch('/api/founder/stats');if(r.status===401){location.href='/founder';return}const d=await r.json();$('#total').textContent=d.totalUsers;$('#free').textContent=d.byPlan.free;$('#plus').textContent=d.byPlan.plus;$('#pro').textContent=d.byPlan.pro}
+async function loadUsers(){const q=encodeURIComponent($('#q').value.trim());const r=await fetch('/api/founder/users?q='+q);if(r.status===401){location.href='/founder';return}const d=await r.json();const body=$('#users');if(!d.users.length){body.innerHTML='<tr><td colspan="5" class="empty">No claimed handles yet.</td></tr>';return}body.innerHTML=d.users.map(u=>`<tr><td><strong>@${escapeHtml(u.username)}</strong></td><td><span class="plan">${escapeHtml(u.plan.toUpperCase())}</span></td><td>${new Date(u.createdAt).toLocaleString()}</td><td title="${u.id}">${u.id.slice(0,8)}…</td><td><button class="remove" data-id="${u.id}">Delete</button></td></tr>`).join('')}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+$('#search').addEventListener('submit',e=>{e.preventDefault();loadUsers()});
+$('#users').addEventListener('click',async e=>{if(!e.target.matches('.remove'))return;const id=e.target.dataset.id;if(!confirm('Delete this claimed handle? This cannot be undone.'))return;const r=await fetch('/api/founder/users/'+id,{method:'DELETE'});const d=await r.json();if(!r.ok){notice(d.error||'Could not delete.');return}notice('@'+d.removed+' deleted.');loadStats();loadUsers()});
+$('#logout').addEventListener('click',async()=>{await fetch('/api/founder/logout',{method:'POST'});location.href='/founder'});
+loadStats();loadUsers();
+</script></body></html>

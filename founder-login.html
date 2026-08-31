@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Founder Login — VOID.LINK</title><link rel="stylesheet" href="styles.css">
+<style>
+body{min-height:100vh;background:#050506;color:#f5f3f7;font-family:Inter,system-ui,sans-serif;display:grid;place-items:center}
+.auth-shell{width:min(460px,calc(100% - 32px));position:relative}.auth-glow{position:absolute;inset:-120px;background:radial-gradient(circle,rgba(166,108,255,.16),transparent 65%);pointer-events:none}
+.auth-card{position:relative;border:1px solid #29262f;background:rgba(12,12,16,.9);backdrop-filter:blur(24px);border-radius:22px;padding:34px;box-shadow:0 35px 100px #000}
+.brand{font:700 11px "Space Mono";letter-spacing:.12em;color:#8f8999}.brand b{color:#a66cff}
+h1{font-size:42px;line-height:.95;letter-spacing:-.06em;margin:38px 0 12px}p{color:#7f7987;font-size:12px;line-height:1.7}
+label{display:block;font:8px "Space Mono";color:#696471;margin:25px 0 9px}
+input{width:100%;box-sizing:border-box;background:#09090c;border:1px solid #29262f;color:#fff;border-radius:10px;padding:14px;outline:none}
+input:focus{border-color:#a66cff;box-shadow:0 0 0 4px rgba(166,108,255,.08)}
+button{width:100%;margin-top:14px;border:0;border-radius:10px;padding:14px;background:#f5f3f7;color:#08080a;font-weight:800;cursor:pointer}
+button:hover{transform:translateY(-1px)}.error{min-height:20px;color:#ff7e9e;font-size:11px;margin-top:12px}
+.back{display:inline-block;margin-top:25px;color:#9d91aa;font-size:11px}.hint{font-size:10px;color:#5e5965;margin-top:17px}
+</style></head><body><main class="auth-shell"><div class="auth-glow"></div><section class="auth-card">
+<div class="brand">VOID<span class="brand b">.LINK</span> / FOUNDER</div>
+<h1>Welcome back.</h1><p>Private platform controls. Your founder password never leaves this server.</p>
+<form id="login"><label for="password">FOUNDER PASSWORD</label><input id="password" type="password" autocomplete="current-password" required>
+<button>Enter dashboard ↗</button><div class="error" id="error"></div></form>
+<div class="hint" id="hint"></div><a class="back" href="/">← Back to public site</a>
+</section></main>
+<script>
+(async()=>{try{const r=await fetch('/api/health');const d=await r.json();if(!d.founderSetup){document.querySelector('#hint').innerHTML='First run? <a href="/founder/setup" style="color:#a66cff">Create your founder password →</a>'}}catch{}})();
+document.querySelector('#login').addEventListener('submit',async e=>{e.preventDefault();const error=document.querySelector('#error');error.textContent='';try{const r=await fetch('/api/founder/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:document.querySelector('#password').value})});const d=await r.json();if(r.status===428){location.href='/founder/setup';return}if(!r.ok)throw Error(d.error||'Login failed.');location.href='/founder/dashboard'}catch(err){error.textContent=err.message}});
+</script></body></html>

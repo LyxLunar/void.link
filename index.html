@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#050506">
+<title>VOID — your profile, your world.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="loader"><div class="loader-logo">VOID<span>.</span></div><div class="loader-bar"><i></i></div></div>
+<div class="stars"></div><div class="vignette"></div><div class="cursor"></div><div class="cursor-dot"></div>
+
+<header>
+  <a class="logo" href="#top">VOID<span>.LINK</span></a>
+  <nav>
+    <a href="#features">Features</a><a href="#preview">Preview</a><a href="#pricing">Premium</a>
+  </nav>
+  <div class="nav-actions"><a class="nav-login" href="/founder">Founder <b>↗</b></a><a class="nav-cta" href="#claim">Claim yours <b>↗</b></a></div>
+  <button class="hamburger">☰</button>
+</header>
+
+<main id="top">
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <div class="pill"><i></i> THE NEW WAY TO BE ONLINE</div>
+      <h1>Your digital identity,<br><em>unlocked.</em></h1>
+      <p>Create a profile that feels like <strong>you</strong>. Showcase your links, music, socials and personality — with ridiculous amounts of customization.</p>
+      <form class="claim" id="claim">
+    <div><span>void.link/</span><input id="handleInput" placeholder="username" maxlength="24" minlength="1" autocomplete="off" spellcheck="false"></div>
+    <button>Claim <b>↗</b></button>
+  </form>
+      <small class="claim-note">Free forever · no credit card · live in minutes</small>
+      <div class="trust"><div class="faces"><b>V</b><b>N</b><b>F</b><b>+</b></div><span><strong>90,000+</strong> creators are already building their space</span></div>
+    </div>
+    <div class="hero-demo">
+      <div class="orbit o1"></div><div class="orbit o2"></div>
+      <div class="demo-card" id="demoCard">
+        <div class="banner">
+          <div class="banner-noise"></div>
+          <div class="banner-top"><span>◉ 1,284 views</span><span>•••</span></div>
+        </div>
+        <div class="profile">
+          <div class="avatar"><span>V</span><i></i></div>
+          <div class="name-row"><div><h2>vesper <sup>✦</sup></h2><p>UID 104928 · <span>Premium</span></p></div><button>↗</button></div>
+          <p class="bio">digital artist · music enjoyer<br>making the internet a little prettier.</p>
+          <div class="socials"><a>𝕏</a><a>◎</a><a>◈</a><a>⌁</a><a>●</a></div>
+          <div class="link"> <span class="link-icon">✦</span><div><b>my portfolio</b><small>see what I've been making</small></div><em>↗</em></div>
+          <div class="link"> <span class="link-icon">♫</span><div><b>latest release</b><small>listen everywhere</small></div><em>↗</em></div>
+          <div class="music"><button id="play">▶</button><div><b>After Hours</b><small>Vesper · original audio</small><i class="progress"><u></u></i></div><span class="bars"><i></i><i></i><i></i><i></i><i></i></span></div>
+        </div>
+      </div>
+      <div class="floating f1"><b>✦</b><span><strong>Fully custom</strong><small>colors · fonts · effects</small></span></div>
+      <div class="floating f2"><b>✓</b><span><strong>Live analytics</strong><small>+24.8% this week</small></span></div>
+    </div>
+  </div>
+  <div class="scroll">SCROLL <span>↓</span></div>
+</section>
+
+<section class="stats">
+  <div><strong>90K+</strong><span>USERS</span></div><div><strong>1.2M</strong><span>LINKS CREATED</span></div><div><strong>18M+</strong><span>PROFILE VIEWS</span></div><div><strong>∞</strong><span>WAYS TO CUSTOMIZE</span></div>
+</section>
+
+<section class="section" id="features">
+  <div class="heading"><div><label>01 — CUSTOMIZATION</label><h2>Make it <em>unmistakably yours.</em></h2></div><p>Not a template factory. A canvas. Mix colors, layouts, widgets, fonts, effects and media until your page feels like your corner of the internet.</p></div>
+  <div class="customizer">
+    <div class="controls">
+      <label>ACCENT COLOR</label>
+      <div class="swatches"><button data-c="#a66cff" class="active"></button><button data-c="#4ea5ff"></button><button data-c="#ff638d"></button><button data-c="#8be34f"></button><button data-c="#fff"></button></div>
+      <label>STYLE</label>
+      <div class="style-buttons"><button class="active">Glass</button><button>Minimal</button><button>Cards</button></div>
+      <label>FEATURES</label>
+      <div class="toggles"><span>Audio visualizer <i class="on"></i></span><span>Profile effects <i class="on"></i></span><span>Custom cursor <i class="on"></i></span><span>Comments <i></i></span></div>
+    </div>
+    <div class="editor">
+      <div class="editor-top"><span>LIVE PREVIEW</span><span>● SAVED</span></div>
+      <div class="editor-page">
+        <div class="mini-avatar">V</div><h3>vesper ✦</h3><p>creative chaos, organized.</p>
+        <div class="mini-socials">𝕏　◎　◈　⌁</div>
+        <div class="mini-link">Portfolio <b>↗</b></div><div class="mini-link">Playlist <b>↗</b></div><div class="mini-link">Contact <b>↗</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section dark-section" id="preview">
+  <div class="heading"><div><label>02 — EVERYTHING IN ONE PLACE</label><h2>More than <em>just links.</em></h2></div></div>
+  <div class="feature-grid">
+    <article class="feature feature-big"><span class="feature-number">01</span><div class="visual music-visual"><div class="disc"></div><div class="track"><b>Night Drive</b><small>Vesper</small><i></i></div><div class="visual-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><h3>Music that actually plays.</h3><p>Put your favorite track front and center with a slick built-in player and visualizer.</p></article>
+    <article class="feature"><span class="feature-number">02</span><div class="visual analytics"><small>PROFILE VIEWS</small><strong>24,892</strong><svg viewBox="0 0 500 130"><path d="M0 112 C55 110 65 80 110 92 S160 115 200 72 S255 86 290 60 S345 76 380 30 S440 55 500 8"/></svg></div><h3>See what people click.</h3><p>Simple analytics for views, clicks and profile performance.</p></article>
+    <article class="feature"><span class="feature-number">03</span><div class="visual widgets"><div>⌁ <b>Discord</b><small>Online</small></div><div>♫ <b>Spotify</b><small>Now playing</small></div><div>◈ <b>Custom</b><small>Widget</small></div></div><h3>Widgets everywhere.</h3><p>Bring your favorite services and custom content directly onto your profile.</p></article>
+    <article class="feature feature-wide"><span class="feature-number">04</span><div class="font-wall"><span>INTER</span><span>SPACE</span><span>MONO</span><span>PIXEL</span><span>HAND</span><span>VOID</span></div><div><h3>Your typography. Your rules.</h3><p>Choose fonts and text styles that fit your identity — from clean minimal to completely chaotic.</p></div></article>
+  </div>
+</section>
+
+<section class="section templates">
+  <div class="heading"><div><label>03 — COMMUNITY TEMPLATES</label><h2>Start beautiful.<br><em>Go completely off-script.</em></h2></div><p>Use a starting point, then break every rule. Every template is just the beginning.</p></div>
+  <div class="template-row">
+    <div class="template t1"><div class="t-avatar">V</div><b>NOIR</b><small>dark · glass · minimal</small></div>
+    <div class="template t2"><div class="t-avatar">✦</div><b>CHROME</b><small>silver · glossy · futuristic</small></div>
+    <div class="template t3"><div class="t-avatar">♡</div><b>DREAM</b><small>soft · dreamy · animated</small></div>
+  </div>
+</section>
+
+<section class="section pricing" id="pricing">
+  <div class="center-heading"><label>04 — PLANS</label><h2>Pick your lane.<br><em>Own your identity.</em></h2><p>Choose a public creator plan. Founder access lives separately behind a secure login.</p></div>
+  <div class="prices plan-grid">
+    <article><label>FREE</label><div class="cost">$0 <small>/ forever</small></div><p>Everything you need to launch a profile and claim a handle.</p><ul><li>✓ 1 profile</li><li>✓ Unlimited links</li><li>✓ Basic themes</li><li>✓ Music player</li><li>✓ Basic analytics</li></ul><button class="plan-select" data-plan="free">Use Free ↗</button></article>
+    <article><label>PLUS</label><div class="cost">$4.99 <small>/ month</small></div><p>More customization, richer widgets and a cleaner creator toolkit.</p><ul><li>✓ Everything in Free</li><li>✓ Advanced themes</li><li>✓ Custom fonts</li><li>✓ More widgets</li><li>✓ Better analytics</li></ul><button class="plan-select" data-plan="plus">Choose Plus ↗</button></article>
+    <article class="pro"><div class="pro-badge">MOST POPULAR</div><label>PRO</label><div class="cost">$9.99 <small>/ month</small></div><p>For creators who want the full visual system and advanced controls.</p><ul><li>✓ Everything in Plus</li><li>✓ Animated backgrounds</li><li>✓ Premium effects</li><li>✓ Custom cursor</li><li>✓ Advanced analytics</li><li>✓ Premium badge</li></ul><button class="plan-select" data-plan="pro">Choose Pro ↗</button></article>
+  </div>
+  <div class="availability" id="availability"><span class="status-dot"></span><span>Type a handle above to check availability.</span></div>
+</section>
+
+
+
+<section class="section faq">
+  <div class="heading"><div><label>05 — FAQ</label><h2>Probably<br><em>your question.</em></h2></div></div>
+  <div class="questions">
+    <details open><summary>What is VOID.LINK?<b>+</b></summary><p>A customizable profile platform for collecting your links, socials, music, content and personality in one place.</p></details>
+    <details><summary>Do I need to code?<b>+</b></summary><p>No. The editor is designed around visual customization and live preview.</p></details>
+    <details><summary>Can I use my own media?<b>+</b></summary><p>Yes — the production version can support your own images, audio, backgrounds and profile assets.</p></details>
+    <details><summary>Is this mobile friendly?<b>+</b></summary><p>Yes. The layout is designed to adapt cleanly from large screens down to phones.</p></details>
+  </div>
+</section>
+
+<section class="final">
+  <div class="final-glow"></div>
+  <label>READY?</label><h2>Claim your corner<br>of the internet.</h2>
+  <form class="claim"><div><span>void.link/</span><input id="finalHandleInput" placeholder="username" maxlength="24" minlength="1" autocomplete="off" spellcheck="false"></div><button>Claim <b>↗</b></button></form>
+  <small>Free forever · build in minutes</small>
+</section>
+</main>
+
+<footer><a class="logo">VOID<span>.LINK</span></a><p>your profile. your world.</p><div><a>Terms</a><a>Privacy</a><a href="/founder">Founder login</a><a href="#top">Back to top ↑</a></div></footer>
+<div class="toast"></div>
+<script src="script.js"></script>
+</body>
+</html>
