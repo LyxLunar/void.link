@@ -7,34 +7,54 @@ const app = express();
 const PORT = Number(process.env.PORT || 3000);
 const HOST = process.env.HOST || "0.0.0.0";
 const ROOT = __dirname;
-const DATA_DIR = path.join(ROOT, "data");
+
+// Vercel serverless functions require write access to the /tmp folder
+const DATA_DIR = process.env.VERCEL ? "/tmp" : path.join(ROOT, "data");
 const DB = path.join(DATA_DIR, "users.json");
 const FOUNDER_DB = path.join(DATA_DIR, "founder.json");
 
 const RESERVED = new Set([
-  "admin","api","www","void","voidlink","founder","support","login","signup",
-  "settings","terms","privacy","dashboard","setup"
+  "admin", "api", "www", "void", "voidlink", "founder", "support", "login", "signup",
+  "settings", "terms", "privacy", "dashboard", "setup"
 ]);
-const PLANS = new Set(["free","plus","pro"]);
+const PLANS = new Set(["free", "plus", "pro"]);
 const sessions = new Map();
 const SESSION_TTL = 1000 * 60 * 60 * 12;
 
-fs.mkdirSync(DATA_DIR, { recursive: true });
-if (!fs.existsSync(DB)) fs.writeFileSync(DB, JSON.stringify({ users: [] }, null, 2));
+// In-Memory Fallback for Stateless Vercel Lambda Execution
+let memoryDB = { users: [] };
+let memoryFounder = { passwordHash: null, salt: null, createdAt: null };
+
+try {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  if (!fs.existsSync(DB)) fs.writeFileSync(DB, JSON.stringify({ users: [] }, null, 2));
+} catch (e) {
+  console.warn("Storage warning: falling back to in-memory mode.");
+}
 
 const readJSON = (file, fallback) => {
-  try { return JSON.parse(fs.readFileSync(file, "utf8")); }
-  catch { return fallback; }
+  try { 
+    return JSON.parse(fs.readFileSync(file, "utf8")); 
+  } catch { 
+    return file === DB ? memoryDB : memoryFounder; 
+  }
 };
-const writeJSON = (file, value) =>
-  fs.writeFileSync(file, JSON.stringify(value, null, 2));
 
-const readDB = () => readJSON(DB, { users: [] });
+const writeJSON = (file, value) => {
+  try {
+    fs.writeFileSync(file, JSON.stringify(value, null, 2));
+  } catch (e) {
+    if (file === DB) memoryDB = value;
+    if (file === FOUNDER_DB) memoryFounder = value;
+  }
+};
+
+const readDB = () => readJSON(DB, memoryDB);
 const clean = value => String(value || "").trim().toLowerCase();
 const valid = username => /^[a-z0-9._-]{1,24}$/.test(username);
 
 function founderConfig() {
-  return readJSON(FOUNDER_DB, { passwordHash: null, salt: null, createdAt: null });
+  return readJSON(FOUNDER_DB, memoryFounder);
 }
 
 function hashPassword(password, salt) {
@@ -75,14 +95,14 @@ function requireFounder(req, res, next) {
   next();
 }
 function cookie(token) {
-  return `void_founder=${encodeURIComponent(token)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESSION_TTL/1000}`;
+  return `void_founder=${encodeURIComponent(token)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESSION_TTL / 1000}`;
 }
 function clearCookie() {
   return "void_founder=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0";
 }
 function escapeHTML(value) {
   return String(value).replace(/[&<>"']/g, ch => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   }[ch]));
 }
 
@@ -252,8 +272,14 @@ app.get("/u/:username", (req, res) => {
   <a class="back" href="/">← Back to VOID</a></main></body></html>`);
 });
 
-app.listen(PORT, HOST, () => {
-  console.log(`\nVOID.LINK is running at http://localhost:${PORT}`);
-  console.log(`Founder login: http://localhost:${PORT}/founder`);
-  if (!founderIsSetup()) console.log("First run: open /founder to create the founder password.");
-});
+// Module export for Vercel
+module.exports = app;
+
+// Local runner execution
+if (process.env.NODE_ENV !== "production") {
+  app.listen(PORT, HOST, () => {
+    console.log(`\nVOID.LINK is running at http://localhost:${PORT}`);
+    console.log(`Founder login: http://localhost:${PORT}/founder`);
+    if (!founderIsSetup()) console.log("First run: open /founder to create the founder password.");
+  });
+}
