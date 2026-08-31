@@ -1,35 +1,66 @@
-<form class="claim" id="claim">
-  <div>
-    <span>void.link/</span>
-    <input
-      id="handleInput"
-      placeholder="username"
-      maxlength="24"
-      minlength="1"
-      autocomplete="off"
-      spellcheck="false"
-    >
+<section class="claim-shell">
+
+  <div class="claim-heading">
+    <span class="eyebrow">
+      YOUR IDENTITY
+    </span>
+
+    <h2>
+      Claim your corner
+      of the internet.
+    </h2>
+
+    <p>
+      Pick a handle. Make it yours.
+      Your profile goes live instantly.
+    </p>
   </div>
 
-  <button type="submit">
-    Claim <b>↗</b>
-  </button>
-</form>
+  <form
+    class="claim"
+    id="claim"
+  >
 
-<form class="claim">
-  <div>
-    <span>void.link/</span>
-    <input
-      id="finalHandleInput"
-      placeholder="username"
-      maxlength="24"
-      minlength="1"
-      autocomplete="off"
-      spellcheck="false"
+    <div class="claim-input">
+
+      <span>
+        void.link/
+      </span>
+
+      <input
+        id="handleInput"
+        name="username"
+        placeholder="username"
+        maxlength="24"
+        minlength="1"
+        autocomplete="off"
+        spellcheck="false"
+        inputmode="text"
+      />
+
+    </div>
+
+    <button
+      type="submit"
     >
+      Claim
+
+      <b>
+        ↗
+      </b>
+    </button>
+
+  </form>
+
+  <div
+    id="availability"
+    class="availability"
+  >
+    <span class="dot"></span>
+
+    <span>
+      Type a handle to check availability.
+    </span>
   </div>
 
-  <button type="submit">
-    Claim <b>↗</b>
-  </button>
-</form>
+</section>
