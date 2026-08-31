@@ -1,52 +1,69 @@
 async function claimHandle(form) {
-  const input = form.querySelector("input");
-  const username = normalize(input.value);
+const input = form.querySelector("input");
 
-  input.value = username;
+if (!input) {
+return;
+}
 
-  if (username.length < 1) {
-    return msg("Handles can be 1–24 characters.");
-  }
+const username = normalize(input.value);
 
-  if (username.length > 24) {
-    return msg("That handle is too long.");
-  }
+input.value = username;
 
-  try {
-    const res = await fetch("/api/handles", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        username,
-        plan: selectedPlan
-      })
-    });
+if (username.length < 1) {
+return msg("Handles can be 1–24 characters.");
+}
 
-    const data = await res.json();
+if (username.length > 24) {
+return msg("That handle is too long.");
+}
 
-    if (!res.ok) {
-      throw new Error(data.error || "Could not claim that handle.");
-    }
+try {
+const res = await fetch("/api/handles", {
+method: "POST",
+headers: {
+"Content-Type": "application/json"
+},
+body: JSON.stringify({
+username,
+plan: selectedPlan
+})
+});
 
-    // The server has successfully created the handle.
-    msg(`Claimed void.link/${data.user.username} ✦`);
+```
+const data = await res.json();
 
-    setAvailability(
-      true,
-      `@${data.user.username} is yours — ${data.user.plan} plan`
-    );
+if (!res.ok) {
+  throw new Error(
+    data.error || "Could not claim that handle."
+  );
+}
 
-    input.value = data.user.username;
+// The handle was successfully created.
+msg(`Claimed void.link/${data.user.username} ✦`);
 
-    // Navigate to the profile returned by the server.
-    window.location.assign(data.profileUrl);
+setAvailability(
+  true,
+  `@${data.user.username} is yours — ${data.user.plan} plan`
+);
 
-  } catch (err) {
-    msg(
-      err.message ||
-      "The server is offline. Start the included Node server first."
-    );
-  }
+input.value = data.user.username;
+
+// Redirect to the newly-created profile.
+window.location.assign(
+  data.profileUrl ||
+  `/u/${encodeURIComponent(data.user.username)}`
+);
+```
+
+} catch (err) {
+console.error("Handle claim error:", err);
+
+```
+msg(
+  err.message ||
+  "The server is offline. Start the included Node server first."
+);
+```
+
+}
 }
