@@ -95,3 +95,4 @@ data/founder.json       Salted founder password hash
 start-windows.bat       One-click Windows launcher
 start.sh                macOS/Linux launcher
 ```
+
