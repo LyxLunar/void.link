@@ -8,8 +8,9 @@ const PORT = Number(process.env.PORT || 3000);
 const HOST = process.env.HOST || "0.0.0.0";
 const ROOT = __dirname;
 
-// Vercel serverless functions require write access to the /tmp folder
-const DATA_DIR = process.env.VERCEL ? "/tmp" : path.join(ROOT, "data");
+// Detect Vercel environment and safely route data to writable /tmp
+const IS_VERCEL = Boolean(process.env.VERCEL);
+const DATA_DIR = IS_VERCEL ? "/tmp" : path.join(ROOT, "data");
 const DB = path.join(DATA_DIR, "users.json");
 const FOUNDER_DB = path.join(DATA_DIR, "founder.json");
 
@@ -21,29 +22,35 @@ const PLANS = new Set(["free", "plus", "pro"]);
 const sessions = new Map();
 const SESSION_TTL = 1000 * 60 * 60 * 12;
 
-// In-Memory Fallback for Stateless Vercel Lambda Execution
+// In-Memory fallback caches to protect against file system issues
 let memoryDB = { users: [] };
 let memoryFounder = { passwordHash: null, salt: null, createdAt: null };
 
+// Safe initialization that will not throw fatal errors on serverless cold starts
 try {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-  if (!fs.existsSync(DB)) fs.writeFileSync(DB, JSON.stringify({ users: [] }, null, 2));
-} catch (e) {
-  console.warn("Storage warning: falling back to in-memory mode.");
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+  if (!fs.existsSync(DB)) {
+    fs.writeFileSync(DB, JSON.stringify({ users: [] }, null, 2));
+  }
+} catch (err) {
+  console.warn("Storage notice: Writable filesystem restricted, falling back to in-memory mode.");
 }
 
 const readJSON = (file, fallback) => {
-  try { 
-    return JSON.parse(fs.readFileSync(file, "utf8")); 
-  } catch { 
-    return file === DB ? memoryDB : memoryFounder; 
-  }
+  try {
+    if (fs.existsSync(file)) {
+      return JSON.parse(fs.readFileSync(file, "utf8"));
+    }
+  } catch (err) {}
+  return file === DB ? memoryDB : memoryFounder;
 };
 
 const writeJSON = (file, value) => {
   try {
     fs.writeFileSync(file, JSON.stringify(value, null, 2));
-  } catch (e) {
+  } catch (err) {
     if (file === DB) memoryDB = value;
     if (file === FOUNDER_DB) memoryFounder = value;
   }
@@ -60,6 +67,7 @@ function founderConfig() {
 function hashPassword(password, salt) {
   return crypto.scryptSync(password, salt, 64).toString("hex");
 }
+
 function passwordMatches(password, config) {
   if (!config.passwordHash || !config.salt) return false;
   const derived = hashPassword(password, config.salt);
@@ -68,15 +76,18 @@ function passwordMatches(password, config) {
     Buffer.from(config.passwordHash, "hex")
   );
 }
+
 function founderIsSetup() {
   const cfg = founderConfig();
   return Boolean(cfg.passwordHash && cfg.salt);
 }
+
 function createSession() {
   const token = crypto.randomBytes(32).toString("hex");
   sessions.set(token, Date.now() + SESSION_TTL);
   return token;
 }
+
 function getSession(req) {
   const raw = req.headers.cookie || "";
   const match = raw.match(/(?:^|;\s*)void_founder=([^;]+)/);
@@ -90,32 +101,38 @@ function getSession(req) {
   sessions.set(token, Date.now() + SESSION_TTL);
   return token;
 }
+
 function requireFounder(req, res, next) {
   if (!getSession(req)) return res.status(401).json({ error: "Founder login required." });
   next();
 }
+
 function cookie(token) {
   return `void_founder=${encodeURIComponent(token)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESSION_TTL / 1000}`;
 }
+
 function clearCookie() {
   return "void_founder=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0";
 }
+
 function escapeHTML(value) {
   return String(value).replace(/[&<>"']/g, ch => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   }[ch]));
 }
 
+// Middleware setup
 app.use(express.json({ limit: "50kb" }));
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(ROOT, { extensions: ["html"] }));
 
+// Route handlers
 app.get("/api/health", (req, res) => {
   const db = readDB();
   res.json({
     ok: true,
     version: "2.0.0",
-    storage: "JSON",
+    storage: IS_VERCEL ? "Serverless/Memory" : "JSON",
     claimed: db.users.length,
     founderSetup: founderIsSetup()
   });
@@ -156,23 +173,28 @@ app.post("/api/handles", (req, res) => {
   res.status(201).json(user);
 });
 
+// Front-End Founder HTML Page Routes
 app.get("/founder", (req, res) => {
   if (getSession(req)) return res.redirect("/founder/dashboard");
   res.sendFile(path.join(ROOT, "founder-login.html"));
 });
+
 app.get("/founder/login", (req, res) => {
   if (getSession(req)) return res.redirect("/founder/dashboard");
   res.sendFile(path.join(ROOT, "founder-login.html"));
 });
+
 app.get("/founder/setup", (req, res) => {
   if (founderIsSetup()) return res.redirect("/founder/login");
   res.sendFile(path.join(ROOT, "founder-setup.html"));
 });
+
 app.get("/founder/dashboard", (req, res) => {
   if (!getSession(req)) return res.redirect("/founder/login");
   res.sendFile(path.join(ROOT, "founder-dashboard.html"));
 });
 
+// Founder API Endpoints
 app.post("/api/founder/setup", (req, res) => {
   if (founderIsSetup())
     return res.status(409).json({ error: "Founder account is already configured." });
@@ -249,6 +271,7 @@ app.delete("/api/founder/users/:id", requireFounder, (req, res) => {
   res.json({ ok: true, removed: removed.username });
 });
 
+// Dynamic User Profile Page Route
 app.get("/u/:username", (req, res) => {
   const username = clean(req.params.username);
   const user = readDB().users.find(x => x.username === username);
@@ -272,11 +295,11 @@ app.get("/u/:username", (req, res) => {
   <a class="back" href="/">← Back to VOID</a></main></body></html>`);
 });
 
-// Module export for Vercel
+// Export Express app for Vercel Serverless Function engine
 module.exports = app;
 
-// Local runner execution
-if (process.env.NODE_ENV !== "production") {
+// Listen locally only when not deployed in production mode
+if (!IS_VERCEL && process.env.NODE_ENV !== "production") {
   app.listen(PORT, HOST, () => {
     console.log(`\nVOID.LINK is running at http://localhost:${PORT}`);
     console.log(`Founder login: http://localhost:${PORT}/founder`);
