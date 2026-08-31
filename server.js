@@ -5,12 +5,9 @@ const crypto = require("crypto");
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
-const HOST = process.env.HOST || "0.0.0.0";
+const HOST = "0.0.0.0";
 const ROOT = __dirname;
-
-// Detect Vercel environment and safely route data to writable /tmp
-const IS_VERCEL = Boolean(process.env.VERCEL);
-const DATA_DIR = IS_VERCEL ? "/tmp" : path.join(ROOT, "data");
+const DATA_DIR = path.join(ROOT, "data");
 const DB = path.join(DATA_DIR, "users.json");
 const FOUNDER_DB = path.join(DATA_DIR, "founder.json");
 
@@ -22,11 +19,7 @@ const PLANS = new Set(["free", "plus", "pro"]);
 const sessions = new Map();
 const SESSION_TTL = 1000 * 60 * 60 * 12;
 
-// In-Memory fallback caches to protect against file system issues
-let memoryDB = { users: [] };
-let memoryFounder = { passwordHash: null, salt: null, createdAt: null };
-
-// Safe initialization that will not throw fatal errors on serverless cold starts
+// File system initialization
 try {
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -35,7 +28,7 @@ try {
     fs.writeFileSync(DB, JSON.stringify({ users: [] }, null, 2));
   }
 } catch (err) {
-  console.warn("Storage notice: Writable filesystem restricted, falling back to in-memory mode.");
+  console.error("Storage initialization error:", err);
 }
 
 const readJSON = (file, fallback) => {
@@ -43,25 +36,26 @@ const readJSON = (file, fallback) => {
     if (fs.existsSync(file)) {
       return JSON.parse(fs.readFileSync(file, "utf8"));
     }
-  } catch (err) {}
-  return file === DB ? memoryDB : memoryFounder;
+  } catch (err) {
+    console.error(`Error reading ${file}:`, err);
+  }
+  return fallback;
 };
 
 const writeJSON = (file, value) => {
   try {
     fs.writeFileSync(file, JSON.stringify(value, null, 2));
   } catch (err) {
-    if (file === DB) memoryDB = value;
-    if (file === FOUNDER_DB) memoryFounder = value;
+    console.error(`Error writing ${file}:`, err);
   }
 };
 
-const readDB = () => readJSON(DB, memoryDB);
+const readDB = () => readJSON(DB, { users: [] });
 const clean = value => String(value || "").trim().toLowerCase();
 const valid = username => /^[a-z0-9._-]{1,24}$/.test(username);
 
 function founderConfig() {
-  return readJSON(FOUNDER_DB, memoryFounder);
+  return readJSON(FOUNDER_DB, { passwordHash: null, salt: null, createdAt: null });
 }
 
 function hashPassword(password, salt) {
@@ -121,23 +115,24 @@ function escapeHTML(value) {
   }[ch]));
 }
 
-// Middleware setup
+// Middleware
 app.use(express.json({ limit: "50kb" }));
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(ROOT, { extensions: ["html"] }));
 
-// Route handlers
+// System Health API
 app.get("/api/health", (req, res) => {
   const db = readDB();
   res.json({
     ok: true,
     version: "2.0.0",
-    storage: IS_VERCEL ? "Serverless/Memory" : "JSON",
+    storage: "JSON",
     claimed: db.users.length,
     founderSetup: founderIsSetup()
   });
 });
 
+// Handle Availability Check API
 app.get("/api/handles/:username", (req, res) => {
   const username = clean(req.params.username);
   if (!valid(username))
@@ -147,6 +142,7 @@ app.get("/api/handles/:username", (req, res) => {
   res.json({ username, available: !taken && !RESERVED.has(username) });
 });
 
+// Create Handle API
 app.post("/api/handles", (req, res) => {
   const username = clean(req.body.username);
   const plan = clean(req.body.plan) || "free";
@@ -173,7 +169,7 @@ app.post("/api/handles", (req, res) => {
   res.status(201).json(user);
 });
 
-// Front-End Founder HTML Page Routes
+// Founder Front-End Web Page Routes
 app.get("/founder", (req, res) => {
   if (getSession(req)) return res.redirect("/founder/dashboard");
   res.sendFile(path.join(ROOT, "founder-login.html"));
@@ -194,7 +190,7 @@ app.get("/founder/dashboard", (req, res) => {
   res.sendFile(path.join(ROOT, "founder-dashboard.html"));
 });
 
-// Founder API Endpoints
+// Founder Authentication API Endpoints
 app.post("/api/founder/setup", (req, res) => {
   if (founderIsSetup())
     return res.status(409).json({ error: "Founder account is already configured." });
@@ -271,7 +267,7 @@ app.delete("/api/founder/users/:id", requireFounder, (req, res) => {
   res.json({ ok: true, removed: removed.username });
 });
 
-// Dynamic User Profile Page Route
+// Dynamic Profile Page Route
 app.get("/u/:username", (req, res) => {
   const username = clean(req.params.username);
   const user = readDB().users.find(x => x.username === username);
@@ -295,14 +291,8 @@ app.get("/u/:username", (req, res) => {
   <a class="back" href="/">← Back to VOID</a></main></body></html>`);
 });
 
-// Export Express app for Vercel Serverless Function engine
-module.exports = app;
-
-// Listen locally only when not deployed in production mode
-if (!IS_VERCEL && process.env.NODE_ENV !== "production") {
-  app.listen(PORT, HOST, () => {
-    console.log(`\nVOID.LINK is running at http://localhost:${PORT}`);
-    console.log(`Founder login: http://localhost:${PORT}/founder`);
-    if (!founderIsSetup()) console.log("First run: open /founder to create the founder password.");
-  });
-}
+// Start Express Server for Railway
+app.listen(PORT, HOST, () => {
+  console.log(`\nVOID.LINK server active on http://${HOST}:${PORT}`);
+  console.log(`Founder entry point: http://${HOST}:${PORT}/founder`);
+});
