@@ -1,5 +1,7 @@
+```js
 const toast =
   document.querySelector(".toast");
+
 
 function msg(text) {
   if (!toast) {
@@ -17,9 +19,7 @@ function msg(text) {
 
   window.__voidToastTimer =
     setTimeout(() => {
-      toast.classList.remove(
-        "show"
-      );
+      toast.classList.remove("show");
     }, 2600);
 }
 
@@ -31,7 +31,8 @@ function normalize(value) {
     .replace(
       /[^a-z0-9._-]/g,
       ""
-    );
+    )
+    .slice(0, 24);
 }
 
 
@@ -39,7 +40,6 @@ let selectedPlan = "free";
 
 
 async function claimHandle(form) {
-
   const input =
     form.querySelector("input");
 
@@ -65,15 +65,15 @@ async function claimHandle(form) {
     return;
   }
 
-  if (
-    username.length > 24
-  ) {
+
+  if (username.length > 24) {
     msg(
       "That handle is too long."
     );
 
     return;
   }
+
 
   const originalHTML =
     button.innerHTML;
@@ -83,8 +83,8 @@ async function claimHandle(form) {
   button.innerHTML =
     "Claiming <b>…</b>";
 
-  try {
 
+  try {
     const response =
       await fetch(
         "/api/handles",
@@ -93,6 +93,9 @@ async function claimHandle(form) {
 
           headers: {
             "Content-Type":
+              "application/json",
+
+            "Accept":
               "application/json"
           },
 
@@ -104,60 +107,102 @@ async function claimHandle(form) {
         }
       );
 
+
     const data =
       await response
         .json()
         .catch(() => ({}));
 
 
-    if (
-      !response.ok ||
-      data.ok !== true
-    ) {
+    console.log(
+      "VOID.LINK claim response:",
+      response.status,
+      data
+    );
 
+
+    if (!response.ok) {
       throw new Error(
         data.error ||
-        "Could not claim that handle."
+        `Could not claim that handle. (${response.status})`
       );
-
     }
 
 
     /*
-     * Prefer the URL generated
-     * by the backend.
-     *
-     * This means the server remains
-     * the source of truth.
+     * Your backend may return
+     * user.username, username,
+     * or just the requested username.
      */
 
-    const claimedUsername =
+    const finalUsername =
       data.user?.username ||
+      data.username ||
       username;
 
-    const profileUrl =
+
+    /*
+     * Use the backend's profileUrl
+     * when available.
+     *
+     * Otherwise build it ourselves.
+     */
+
+    let profileUrl =
       data.profileUrl ||
       `/u/${encodeURIComponent(
-        claimedUsername
+        finalUsername
       )}`;
 
 
+    /*
+     * Make sure an absolute backend
+     * URL cannot break the redirect.
+     */
+
+    try {
+      const url =
+        new URL(
+          profileUrl,
+          window.location.origin
+        );
+
+      profileUrl =
+        url.pathname +
+        url.search +
+        url.hash;
+
+    } catch {
+      profileUrl =
+        `/u/${encodeURIComponent(
+          finalUsername
+        )}`;
+    }
+
+
     msg(
-      `Claimed void.link/${claimedUsername} ✦`
+      `Claimed void.link/${finalUsername} ✦`
     );
 
 
     /*
-     * THE REDIRECT
+     * IMPORTANT:
+     *
+     * Don't use another submit
+     * handler after this.
+     *
+     * Navigate directly.
      */
 
-    window.location.assign(
-      profileUrl
-    );
+    window.location.href =
+      profileUrl;
+
 
   } catch (error) {
-
-    console.error(error);
+    console.error(
+      "VOID.LINK claim error:",
+      error
+    );
 
     msg(
       error.message ||
@@ -173,12 +218,14 @@ async function claimHandle(form) {
 
 
 /*
- * Works with BOTH of your
- * .claim forms.
+ * Attach exactly ONE submit
+ * listener to each claim form.
  */
 
 document
-  .querySelectorAll(".claim")
+  .querySelectorAll(
+    "form.claim"
+  )
   .forEach(form => {
 
     form.addEventListener(
@@ -187,9 +234,12 @@ document
 
         event.preventDefault();
 
+        event.stopPropagation();
+
         claimHandle(form);
 
       }
     );
 
   });
+```
