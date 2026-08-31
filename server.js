@@ -1,49 +1,53 @@
-// Create Handle API
 app.post("/api/handles", (req, res) => {
-  const username = clean(req.body.username);
-  const plan = clean(req.body.plan) || "free";
+const username = clean(req.body.username);
+const plan = clean(req.body.plan) || "free";
 
-  if (!valid(username)) {
-    return res.status(400).json({
-      error: "Handle must be 1–24 characters: a-z, 0-9, dot, underscore or hyphen."
-    });
-  }
+if (!valid(username)) {
+return res.status(400).json({
+error:
+"Handle must be 1–24 characters: a-z, 0-9, dot, underscore or hyphen."
+});
+}
 
-  if (RESERVED.has(username)) {
-    return res.status(409).json({
-      error: "That handle is reserved."
-    });
-  }
+if (RESERVED.has(username)) {
+return res.status(409).json({
+error: "That handle is reserved."
+});
+}
 
-  if (!PLANS.has(plan)) {
-    return res.status(400).json({
-      error: "Choose a valid public plan."
-    });
-  }
+if (!PLANS.has(plan)) {
+return res.status(400).json({
+error: "Choose a valid public plan."
+});
+}
 
-  const db = readDB();
+const db = readDB();
 
-  if (db.users.some(user => user.username === username)) {
-    return res.status(409).json({
-      error: "That handle is already claimed."
-    });
-  }
+const existingUser = db.users.find(
+(user) => user.username === username
+);
 
-  const user = {
-    id: crypto.randomUUID(),
-    username,
-    role: "user",
-    plan,
-    createdAt: new Date().toISOString()
-  };
+if (existingUser) {
+return res.status(409).json({
+error: "That handle is already claimed."
+});
+}
 
-  db.users.push(user);
-  writeJSON(DB, db);
+const user = {
+id: crypto.randomUUID(),
+username,
+role: "user",
+plan,
+createdAt: new Date().toISOString()
+};
 
-  // Explicitly return the URL the frontend should navigate to.
-  res.status(201).json({
-    ok: true,
-    user,
-    profileUrl: `/u/${encodeURIComponent(username)}`
-  });
+db.users.push(user);
+
+writeJSON(DB, db);
+
+return res.status(201).json({
+ok: true,
+user,
+profileUrl: `/u/${encodeURIComponent(username)}`
+});
 });
